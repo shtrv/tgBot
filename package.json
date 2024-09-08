@@ -16,5 +16,8 @@
     "url": "https://github.com/shtrv/tgBot/issues"
   },
   "homepage": "https://github.com/shtrv/tgBot#readme",
-  "description": "tg-bot"
+  "description": "tg-bot",
+  "dependencies": {
+    "telegraf": "^4.16.3"
+  }
 }
