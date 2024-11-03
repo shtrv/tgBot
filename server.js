@@ -8,62 +8,39 @@ bot.on("text", async (ctx) => {
   const urlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
   if (urlPattern.test(ctx.text)) {
     const videoUrl = ctx.text;
-    /*     ytdl(videoUrl, { quality: "highestvideo" })
-      .pipe(fs.createWriteStream(fileName))
-      .on("finish", () => {
-        ctx.reply("Видео успешно скачано! Отправляю вам файл...");
+    const keyboard = [];
 
-        // Отправка файла пользователю
-        ctx
-          .sendVideo({ source: fileName })
-          .then(() => {
-            // Удаляем файл после отправки
-            fs.unlinkSync(fileName);
-          })
-          .catch((error) => {
-            console.error(error);
-            ctx.reply("Произошла ошибка при отправке файла.");
-          });
-      })
-      .on("error", (error) => {
-        console.error(error);
-        ctx.reply(
-          "Произошла ошибка при скачивании видео. Пожалуйста, попробуйте еще раз."
-        );
-      }); */
+    // Получаем информацию о видео
+    let info = await ytdl.getInfo(videoUrl);
 
-    const info = await ytdl.getInfo(videoUrl);
-    const formats = info.formats;
-    // let format = ytdl.chooseFormat(info.formats, { quality: '134' });
-    const downloadLinks = formats
-      .filter((format) => format.mimeType?.includes("video") && format.quality)
-      .map((format) => ({
-        url: format.url,
-        itag: format.itag,
-        mimeType: format.mimeType,
-        qualityLabel: format.qualityLabel,
-        quality: format.quality,
-        videoCodec: format.videoCodec,
-      }))
-      .sort((a, b) => b.quality - a.quality) // Сортировка по убыванию качества
-      .slice(0, 5); // Берём только первые 5 форматов);
-    console.log(downloadLinks);
+    // Фильтруем форматы видео, чтобы получить видео с максимальным качеством
+    const videoFormats = ytdl.filterFormats(info.formats, "videoonly");
+    const bestVideoFormats = videoFormats
+      .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0)) // Сортируем по битрейту
+      .slice(0, 3); // Получаем три лучших видео формата
 
-    //ctx.reply(JSON.stringify(downloadLinks));
-    //ctx.reply("забебал");
-    const keyboard = downloadLinks.map((link) => {
-      return [
+    // Фильтруем форматы аудио, чтобы получить только аудио с максимальным качеством
+    const audioFormats = ytdl.filterFormats(info.formats, "audioonly");
+    const bestAudioFormats = audioFormats
+      .sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0)) // Сортируем по битрейту
+      .slice(0, 2); // Получаем два лучших аудио формата
+
+    bestVideoFormats.forEach((video) => {
+      keyboard.push([
         Markup.button.url(
-          `Качество: ${link.qualityLabel} + Кодек: ${link.videoCodec}`,
-          link.url
+          `🎥 Качество: ${video.qualityLabel} | Кодек: ${video.videoCodec} | Битрейт: ${video.bitrate}`,
+          video.url
         ),
-      ];
+      ]);
     });
 
-    ctx.reply(
-      "Выберите формат для скачивания:",
-      Markup.inlineKeyboard(keyboard)
-    );
+    bestAudioFormats.forEach((audio) => {
+      keyboard.push([
+        Markup.button.url(`🎵 Кодек: ${audio.audioCodec}`, audio.url),
+      ]);
+    });
+
+    ctx.reply("Ссылки для скачивания:", Markup.inlineKeyboard(keyboard));
   } else {
     ctx.reply("Эээ заебал да, не пиши эту хуйню");
   }
