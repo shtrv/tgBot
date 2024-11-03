@@ -37,7 +37,7 @@ bot.on("text", async (ctx) => {
     const formats = info.formats;
     // let format = ytdl.chooseFormat(info.formats, { quality: '134' });
     const downloadLinks = formats
-      .filter(format => format.mimeType?.includes('video'))
+      .filter(format => format.mimeType?.includes('video') && format.quality)
       .map((format) => ({
         url: format.url,
         itag: format.itag,
