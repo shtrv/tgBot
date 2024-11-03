@@ -2,7 +2,6 @@ require("dotenv").config();
 const { Telegraf, Markup } = require("telegraf");
 const ytdl = require("@distube/ytdl-core");
 
-
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.on("text", async (ctx) => {
@@ -37,7 +36,7 @@ bot.on("text", async (ctx) => {
     const formats = info.formats;
     // let format = ytdl.chooseFormat(info.formats, { quality: '134' });
     const downloadLinks = formats
-      .filter(format => format.mimeType?.includes('video') && format.quality)
+      .filter((format) => format.mimeType?.includes("video") && format.quality)
       .map((format) => ({
         url: format.url,
         itag: format.itag,
@@ -45,18 +44,28 @@ bot.on("text", async (ctx) => {
         qualityLabel: format.qualityLabel,
         quality: format.quality,
         videoCodec: format.videoCodec,
-      }));
+      }))
+      .sort((a, b) => b.quality - a.quality) // Сортировка по убыванию качества
+      .slice(0, 5); // Берём только первые 5 форматов);
     console.log(downloadLinks);
 
     //ctx.reply(JSON.stringify(downloadLinks));
     //ctx.reply("забебал");
-    const keyboard = downloadLinks.map(link => {
-        return [Markup.button.url(`Качество: ${link.qualityLabel} + Кодек: ${link.videoCodec}`, link.url)];
+    const keyboard = downloadLinks.map((link) => {
+      return [
+        Markup.button.url(
+          `Качество: ${link.qualityLabel} + Кодек: ${link.videoCodec}`,
+          link.url
+        ),
+      ];
     });
 
-    ctx.reply("Выберите формат для скачивания:", Markup.inlineKeyboard(keyboard));
+    ctx.reply(
+      "Выберите формат для скачивания:",
+      Markup.inlineKeyboard(keyboard)
+    );
   } else {
-    ctx.reply('Эээ заебал да, не пиши эту хуйню')
+    ctx.reply("Эээ заебал да, не пиши эту хуйню");
   }
 });
 
