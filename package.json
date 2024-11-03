@@ -19,10 +19,9 @@
   "homepage": "https://github.com/shtrv/tgBot#readme",
   "description": "tg-bot",
   "dependencies": {
-    "axios": "^1.7.7",
+    "@distube/ytdl-core": "^4.15.1",
     "dotenv": "^16.4.5",
-    "telegraf": "^4.16.3",
-    "ytdl-core": "^4.11.5"
+    "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
