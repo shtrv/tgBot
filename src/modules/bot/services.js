@@ -1,8 +1,4 @@
-// src/services/messageHandler.js
-
 const sendYoutubeLinks = require('../youtube/send-youtube-links');
-// Подключите другие модули по мере необходимости
-// const tiktokModule = require('../modules/tiktok/send-tiktok-links');
 
 /**
  * Обрабатывает получение нового сообщения и вызывает нужный модуль в зависимости от источника.

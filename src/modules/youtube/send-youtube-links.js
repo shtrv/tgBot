@@ -16,7 +16,7 @@ async function sendLinks(ctx, link) {
         videoFormats.forEach((video) => {
             keyboard.push([
                 Markup.button.url(
-                    `🎥 ${video.qualityLabel} | ${video.videoCodec}`,
+                    `🎥 ${video.qualityLabel} | ${video.videoCodec} | ${video.bitrate}`,
                     video.url
                 ),
             ]);
