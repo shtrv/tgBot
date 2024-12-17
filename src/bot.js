@@ -6,7 +6,9 @@ const { newMessageReceived } = require("./modules/bot/services");
 
 const axios = require('axios'); // Для скачивания файлов
 const fs = require('fs'); // Для сохранения файлов
+
 const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static'); // Путь к ffmpeg
 
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -53,24 +55,42 @@ bot.on('audio', async (ctx) => {
 
     // Скачивание файла
     const response = await axios.get(fileLink.href, { responseType: 'stream' });
-    const fileName = `audio_${Date.now()}.opus`;
+    const tempFileName = `audio_${Date.now()}.mp3`; // Скачиваем в исходном формате
 
     // Сохранение файла
-    const writeStream = fs.createWriteStream(fileName);
+    const writeStream = fs.createWriteStream(tempFileName);
     response.data.pipe(writeStream);
 
-    writeStream.on('finish', async () => {
-      console.log('Файл сохранён:', fileName);
+    writeStream.on('finish', () => {
+      console.log('Файл сохранён:', tempFileName);
 
-      // Отправка файла как голосовое сообщение
-      await ctx.replyWithVoice({ source: fileName });
-      console.log('Голосовое сообщение отправлено.');
+      // Конвертируем файл в формат .opus
+      const outputFileName = `audio_${Date.now()}.opus`;
 
-      // Удаление файла после отправки (необязательно)
-      fs.unlinkSync(fileName);
-      console.log('Временный файл удалён.');
+      ffmpeg.setFfmpegPath(ffmpegStatic);
+
+      ffmpeg(tempFileName)
+        .inputOptions('-t 30') // Пример: ограничить длину файла, если необходимо
+        .output(outputFileName)
+        .audioCodec('libopus')
+        .on('end', async () => {
+          console.log('Конвертация завершена:', outputFileName);
+
+          // Отправка файла как голосовое сообщение
+          await ctx.replyWithVoice({ source: outputFileName });
+          console.log('Голосовое сообщение отправлено.');
+
+          // Удаление временных файлов
+          fs.unlinkSync(tempFileName);
+          fs.unlinkSync(outputFileName);
+          console.log('Временные файлы удалены.');
+        })
+        .on('error', (err) => {
+          console.error('Ошибка конвертации:', err);
+          ctx.reply('Произошла ошибка при конвертации аудиофайла.');
+        })
+        .run();
     });
-    
 
     writeStream.on('error', (err) => {
       console.error('Ошибка сохранения файла:', err);
